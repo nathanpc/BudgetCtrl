@@ -1,0 +1,29 @@
+# Fuck off!
+RedirectMatch 404 /\.git
+
+# Disable directory indexing.
+Options -Indexes
+
+# Deny access to this very file.
+<Files .htaccess>
+	Order allow,deny
+	Deny from all
+</Files>
+
+# Deny access to sensitive files in the root.
+<FilesMatch "config.php|.gitignore|README.md">
+	Order allow,deny
+	Deny from all
+</FilesMatch>
+
+# Fancy URLs!
+RewriteEngine On
+#RewriteBase /
+RewriteCond %{SCRIPT_FILENAME} !-d
+RewriteCond %{SCRIPT_FILENAME} !-f
+
+# API stuff.
+#RewriteRule ^api/manage/([A-Za-z0-9-_]+)/([0-9]+)/?$ api/manage.php?action=$1&id=$2 [NC,QSA,L]
+
+# Users shouldn't see these pages.
+RedirectMatch 404 api/DatabaseHelper.php
