@@ -37,9 +37,8 @@ class Database {
 		}
 		
 		// Build the SQL query.
-		$query = "INSERT INTO " . $this->strip_str($table) . "(" .
-			implode(", ", array_keys($cols)) . ") VALUES(" .
-			implode(", ", array_keys($kcols)) . ")";
+		$query = "INSERT INTO $table(" . implode(", ", array_keys($cols)) .
+			") VALUES(" . implode(", ", array_keys($kcols)) . ")";
 		$sql = $this->pdo->prepare($query);
 
 		// Execute the query and check if it failed.
@@ -55,29 +54,26 @@ class Database {
 	}
 
 	/**
-	 * Checks if a component exists.
+	 * Selects some rows from a table.
 	 *
-	 * @param string $mpn Part number
-	 * @param string $octopart_uid Octopart UID
-	 * @return boolean False if it doesn't exist, PDO->Query if it does
+	 * @param  string $table Table name.
+	 * @param  array  $cols  List of the column names to be fetched.
+	 * @return array         Associative array with all the rows.
 	 */
-	public function check_exists($mpn, $octopart_uid) {
-		$sql = $this->pdo->prepare("SELECT * FROM Inventory WHERE mpn = :mpn AND octopart_uid = :octopart_uid");
-		$success = $sql->execute(array(
-			":mpn" => $mpn,
-			":octopart_uid" => $octopart_uid));
+	public function select($table, $cols) {
+		// Build the SQL query.
+		$query = "SELECT " . implode(", ", $cols) . "FROM $table";
+		$sql = $this->pdo->prepare($query);
 
-		if (!$success) {
-			#$this->log->post(Log::LVL_ERROR, __METHOD__ . ":" . __LINE__ . " Couldn't locate the component.");
-			throw new Exception("Couldn't locate the component.");
+		// Execute the query and check if it failed.
+		if (!$sql->execute()) {
+			$err = $sql->errorInfo();
+
+			throw new Exception($err[0] . " (" . $err[1] . "): " . $err[2]);
+			return NULL;
 		}
 
-		if ($part = $sql->fetch()) {
-			// The component exists!
-			return $part;
-		}
-
-		return false;
+		return $sql->fetchAll();
 	}
 
 	/**
@@ -104,6 +100,16 @@ class Database {
 	 */
 	private function strip_str($str) {
 		return preg_replace("/[^a-zA-Z0-9]+/", "", $str);
+	}
+
+	/**
+	 * Sanitize a ISO8601 string to make it safer to use in a database query.
+	 *
+	 * @param  string $str ISO8601 string.
+	 * @return string      Sanitized string.
+	 */
+	public static function sanitize_dt($str) {
+		return preg_replace("/[^a-zA-Z0-9\s\-\:\+\.]+/", "", $str);
 	}
 }
 ?>

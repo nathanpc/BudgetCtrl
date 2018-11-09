@@ -23,6 +23,7 @@ function handle_request() {
 		// Valid actions for POST: add.
 		switch ($_GET["action"]) {
 		case "add":
+			// Add a new entry.
 			$dt = new DateTime($_GET["dt"], new DateTimeZone("UTC"));
 
 			$manage->add(
@@ -37,7 +38,20 @@ function handle_request() {
 			Response::error("Invalid action type: " . $_GET["action"], 405);
 		}
 	} else if ($_SERVER["REQUEST_METHOD"] == "GET") {
-		// Valid actions for GET: .
+		// Valid actions for GET: list.
+		switch ($_GET["action"]) {
+		case "list":
+			// List entries.
+			// Make from and to dates safer.
+			$from = Database::sanitize_dt($_GET["from"]);
+			$to = Database::sanitize_dt($_GET["to"]);
+
+			$manage->list($from, $to);
+			break;
+		default:
+			// Invalid action.
+			Response::error("Invalid action type: " . $_GET["action"], 405);	
+		}
 	} else {
 		// Invalid request type.
 		Response::error("Invalid request type: " . $_SERVER["REQUEST_METHOD"], 405);
@@ -98,6 +112,44 @@ class Manage {
 
 		echo json_encode($res);
 		// TODO: The application should then issue a img_upload to the returned ID.
+	}
+
+	/**
+	 * Lists all the entries between two dates.
+	 *
+	 * @param string $from Initial date.
+	 * @param string $to   Final date.
+	 */
+	public function list($from, $to) {
+		// TODO: Implement the period search.
+		$entries = $this->db->select("Entries", ["*"]);
+		$res = [
+			"entries" => [],
+			"count" => count($entries)
+		];
+
+		foreach ($entries as $row) {
+			// TODO: Fetch the category name by the ID.
+			// Populate a local assoc array with the cats as a cache.
+
+			$item = [
+				"id" => $row["id"],
+				"datetime" => [
+					"iso8601" => $row["dt"]
+				],
+				"category" => [
+					"id" => $row["cat_id"],
+					"name" => "TODO"
+				],
+				"description" => $row["description"],
+				"value" => $row["value"]
+			];
+
+			// Push item to array of entries.
+			array_push($res["entries"], $item);
+		}
+
+		echo json_encode($res);
 	}
 }
 
