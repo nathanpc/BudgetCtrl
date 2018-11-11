@@ -91,7 +91,8 @@ var populate_total_value = function (total) {
  */
 var populate_entries_list = function (from, to) {
 	$.ajax({
-		url: base_url + "/api/manage.php?action=list&from=" + from + "&to=" + to
+		url: base_url + "/api/manage.php?action=list&from=" +
+			from.toISOString() + "&to=" + to.toISOString()
 	}).then(function (data) {
 		var days = [];
 		var total = 0;
@@ -131,9 +132,49 @@ var populate_entries_list = function (from, to) {
 }
 
 /**
+ * Format a date to be used as a value in a input with "date" type.
+ *
+ * @param  Date   date Date to be converted.
+ * @return String      Formatted string.
+ */
+var date_inputval_format = function (date) {
+	return date.getFullYear() + "-" + (date.getMonth() + 1).pad(2) + "-" +
+		date.getDate().pad(2);
+}
+
+/**
+ * Pads a number with leading zeroes.
+ *
+ * @param  Number size Maximum number of digits.
+ * @return String      Padded number.
+ */
+Number.prototype.pad = function (size) {
+	var str = String(this);
+
+	while (str.length < (size || 2)) {
+		str = "0" + str;
+	}
+
+	return str;
+}
+
+/**
  * Things that are executed when the page is ready.
  */
 $(document).ready(function () {
-	populate_entries_list("2018-01-01T00:00:00+00:00", "now");
+	var from = new Date();
+	var to = new Date();
+
+	// Set the default range for the past month.
+	from.setMonth(to.getMonth() - 1);
+
+	// Set the date ranges.
+	$("#date-from").val(date_inputval_format(from));
+	$("#date-to").val(date_inputval_format(to));
+
+	// TODO: Trigger a repopulate when the range changes.
+
+	// Populate the entries list.
+	populate_entries_list(from, to);
 });
 
