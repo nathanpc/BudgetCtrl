@@ -22,8 +22,13 @@ RewriteEngine On
 RewriteCond %{SCRIPT_FILENAME} !-d
 RewriteCond %{SCRIPT_FILENAME} !-f
 
+# Redirect the index page.
+RewriteRule ^/$ webapp/index.html [NC,QSA,L]
+
 # API stuff.
 #RewriteRule ^api/manage/([A-Za-z0-9-_]+)/([0-9]+)/?$ api/manage.php?action=$1&id=$2 [NC,QSA,L]
 
 # Users shouldn't see these pages.
 RedirectMatch 404 api/DatabaseHelper.php
+RedirectMatch 404 api/ResponseHelper.php
+

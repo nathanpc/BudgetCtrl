@@ -133,16 +133,16 @@ class Manage {
 			// Populate a local assoc array with the cats as a cache.
 
 			$item = [
-				"id" => $row["id"],
+				"id" => (int)$row["id"],
 				"datetime" => [
 					"iso8601" => $row["dt"]
 				],
 				"category" => [
-					"id" => $row["cat_id"],
+					"id" => (int)$row["cat_id"],
 					"name" => "TODO"
 				],
 				"description" => $row["description"],
-				"value" => $row["value"]
+				"value" => floatval($row["value"])
 			];
 
 			// Push item to array of entries.

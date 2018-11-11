@@ -1,0 +1,29 @@
+/**
+ * custom.css
+ * Some simple styling to customize the Bootstrap look.
+ *
+ * @author Nathan Campos <nathan@innoveworkshop.com>
+ */
+
+/* Navigation Bar */
+.navbar {
+	margin-bottom: 20px;
+}
+
+/* Entry List */
+.month-entry {
+	margin-bottom: 40px;
+}
+
+.entry-item .category {
+	color: #929292;
+}
+
+/* Final Report */
+#final-report .total {
+	display: flex;
+	justify-content: space-between;
+	width: 100%;
+	font-size: 1.5em;
+}
+
