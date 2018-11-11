@@ -45,7 +45,7 @@ var create_entry_item = function (desc, category, value) {
  * @return DOMElement       Entry list container.
  */
 var create_entry_list = function (dt, items) {
-	var root = $("<div>", { class: "month-entry" });
+	var root = $("<div>", { class: "month-entry mb-4" });
 	
 	// Date label.
 	var date_label = $("<h4>");
