@@ -159,6 +159,21 @@ Number.prototype.pad = function (size) {
 }
 
 /**
+ * Date range change event.
+ */
+var dateRangeChanged = function () {
+	var from = new Date($("#date-from").val());
+	var to = new Date($("#date-to").val());
+
+	// Set the hour and minutes to encompass the whole day.
+	from.setHours(23, 59, 59);
+	to.setHours(23, 59, 59);
+
+	// Populate the entries list.
+	populate_entries_list(from, to);
+}
+
+/**
  * Things that are executed when the page is ready.
  */
 $(document).ready(function () {
@@ -172,9 +187,7 @@ $(document).ready(function () {
 	$("#date-from").val(date_inputval_format(from));
 	$("#date-to").val(date_inputval_format(to));
 
-	// TODO: Trigger a repopulate when the range changes.
-
-	// Populate the entries list.
-	populate_entries_list(from, to);
+	// Trigger the range change event manually.
+	dateRangeChanged();
 });
 
