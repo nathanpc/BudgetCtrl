@@ -100,6 +100,8 @@ EntriesList.prototype.populateTotalValue = function (total) {
 EntriesList.prototype.populateEntriesList = function (from, to, callback) {
 	var self = this;
 
+	// TODO: Handle errors.
+
 	$.ajax({
 		url: this.base_url + "/api/manage.php?action=list&from=" +
 			from.toISOString() + "&to=" + to.toISOString()

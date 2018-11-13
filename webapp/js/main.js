@@ -34,6 +34,36 @@ var dateRangeChanged = function (callback) {
 }
 
 /**
+ * Opens the entry edit modal.
+ *
+ * @param String action Action type (add or edit).
+ */
+var openEntryModal = function (action) {
+	if (action == "add") {
+		// Change things to reflect the Add action.
+		$("#entry-modal .modal-title").text("Add Entry");
+	}
+
+	// Set the date to now.
+	var date = new Date();
+	date.setHours(0, 0, 0);
+	$("#entry-edit-date").val(date.toInputValueFormat());
+
+	$.get("/api/manage.php?action=list_categories", function (data) {
+		// Populates the categories selection group.
+		data.categories.forEach(function (category) {
+			var option = $("<option>", { value: category.id });
+			option.text(category.name);
+
+			$("#entry-edit-category").append(option);
+		});
+
+		// Open the modal.
+		$("#entry-modal").modal("show");
+	});
+}
+
+/**
  * Submits a new entry.
  */
 var submitEntryInput = function () {

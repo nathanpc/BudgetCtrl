@@ -38,7 +38,7 @@ function handle_request() {
 			Response::error("Invalid action type: " . $_GET["action"], 405);
 		}
 	} else if ($_SERVER["REQUEST_METHOD"] == "GET") {
-		// Valid actions for GET: list.
+		// Valid actions for GET: list, get_categories.
 		switch ($_GET["action"]) {
 		case "list":
 			// List entries.
@@ -47,6 +47,9 @@ function handle_request() {
 			$to = Database::sanitize_dt($_GET["to"]);
 
 			$manage->list($from, $to);
+			break;
+		case "list_categories":
+			$manage->list_categories();
 			break;
 		default:
 			// Invalid action.
@@ -61,6 +64,7 @@ function handle_request() {
 class Manage {
 	private $db;
 	public $id;
+	public $categories;
 
 	/**
 	 * Class constructor.
@@ -70,6 +74,8 @@ class Manage {
 	function __construct($id = NULL) {
 		$this->db = new Database();
 		$this->id = $id;
+
+		$this->update_categories_cache();
 	}
 
 	/**
@@ -127,10 +133,10 @@ class Manage {
 			"count" => count($entries)
 		];
 
-		foreach ($entries as $row) {
-			// TODO: Fetch the category name by the ID.
-			// Populate a local assoc array with the cats as a cache.
+		// Update the categories cache.
+		$this->update_categories_cache();
 
+		foreach ($entries as $row) {
 			$item = [
 				"id" => (int)$row["id"],
 				"datetime" => [
@@ -138,7 +144,7 @@ class Manage {
 				],
 				"category" => [
 					"id" => (int)$row["cat_id"],
-					"name" => "TODO"
+					"name" => $this->get_category_name((int)$row["cat_id"])
 				],
 				"description" => $row["description"],
 				"value" => floatval($row["value"])
@@ -149,6 +155,49 @@ class Manage {
 		}
 
 		echo json_encode($res);
+	}
+
+	/**
+	 * Lists all the categories available.
+	 */
+	public function list_categories() {
+		$cats = [
+			"categories" => []
+		];
+
+		foreach ($this->categories as $cat) {
+			$category = [
+				"id" => $cat["id"],
+				"name" => $cat["name"]
+			];
+
+			array_push($cats["categories"], $category);
+		}
+
+		echo json_encode($cats);
+	}
+
+	/**
+	 * Updates the categories cache.
+	 */
+	private function update_categories_cache() {
+		$this->categories = $this->db->select("Categories", ["*"], "ORDER BY name ASC");
+	}
+
+	/**
+	 * Gets a category name from the ID.
+	 *
+	 * @param  int    $id Category ID.
+	 * @return String     Category name or NULL if not found.
+	 */
+	private function get_category_name($id) {
+		foreach ($this->categories as $cat) {
+			if ((int)$cat["id"] == $id) {
+				return $cat["name"];
+			}
+		}
+
+		return NULL;
 	}
 }
 
