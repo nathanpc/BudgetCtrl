@@ -22,7 +22,7 @@ var dateRangeChanged = function (callback) {
 	var to = new Date($("#date-to").val());
 
 	// Set the hour and minutes to encompass the whole day.
-	from.setHours(23, 59, 59);
+	from.setHours(0, 0, 0);
 	to.setHours(23, 59, 59);
 
 	// Populate the entries list.

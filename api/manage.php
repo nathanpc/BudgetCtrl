@@ -121,8 +121,7 @@ class Manage {
 	 * @param string $to   Final date.
 	 */
 	public function list($from, $to) {
-		// TODO: Implement the period search.
-		$entries = $this->db->select("Entries", ["*"], "ORDER BY datetime(dt) DESC");
+		$entries = $this->db->select("Entries", ["*"], "WHERE dt BETWEEN '$from' AND '$to' ORDER BY datetime(dt) DESC");
 		$res = [
 			"entries" => [],
 			"count" => count($entries)
