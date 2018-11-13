@@ -58,14 +58,20 @@ class Database {
 	 *
 	 * @param  string $table Table name.
 	 * @param  array  $cols  List of the column names to be fetched.
+	 * @param  string $opts  Custom options for the SQL query.
 	 * @return array         Associative array with all the rows.
 	 */
-	public function select($table, $cols) {
+	public function select($table, $cols, $opts = NULL) {
 		// Build the SQL query.
 		$query = "SELECT " . implode(", ", $cols) . "FROM $table";
-		$sql = $this->pdo->prepare($query);
+
+		// Apply custom options.
+		if (!is_null($opts)) {
+			$query .= " $opts";
+		}
 
 		// Execute the query and check if it failed.
+		$sql = $this->pdo->prepare($query);
 		if (!$sql->execute()) {
 			$err = $sql->errorInfo();
 

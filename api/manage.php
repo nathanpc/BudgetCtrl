@@ -122,7 +122,7 @@ class Manage {
 	 */
 	public function list($from, $to) {
 		// TODO: Implement the period search.
-		$entries = $this->db->select("Entries", ["*"]);
+		$entries = $this->db->select("Entries", ["*"], "ORDER BY datetime(dt) DESC");
 		$res = [
 			"entries" => [],
 			"count" => count($entries)
