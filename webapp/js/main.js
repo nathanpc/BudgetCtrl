@@ -13,35 +13,11 @@ var currency_symbol = "&euro;";
 var entriesList = new EntriesList(base_url, currency_symbol);
 
 /**
- * Format a date to be used as a value in a input with "date" type.
- *
- * @return String      Formatted string.
- */
-Date.prototype.toInputValueFormat = function () {
-	return this.getFullYear() + "-" + (this.getMonth() + 1).pad(2) + "-" +
-		this.getDate().pad(2);
-}
-
-/**
- * Pads a number with leading zeroes.
- *
- * @param  Number size Maximum number of digits.
- * @return String      Padded number.
- */
-Number.prototype.pad = function (size) {
-	var str = String(this);
-
-	while (str.length < (size || 2)) {
-		str = "0" + str;
-	}
-
-	return str;
-}
-
-/**
  * Date range change event.
+ *
+ * @param Function callback Called when everything has finished.
  */
-var dateRangeChanged = function () {
+var dateRangeChanged = function (callback) {
 	var from = new Date($("#date-from").val());
 	var to = new Date($("#date-to").val());
 
@@ -50,7 +26,37 @@ var dateRangeChanged = function () {
 	to.setHours(23, 59, 59);
 
 	// Populate the entries list.
-	entriesList.populateEntriesList(from, to);
+	entriesList.populateEntriesList(from, to, function () {
+		if (typeof callback == "function") {
+			callback();
+		}	
+	});
+}
+
+/**
+ * Submits a new entry.
+ */
+var submitEntryInput = function () {
+	var cat_id = $("#entry-edit-category").val();
+	var desc = $("#entry-edit-description").val();
+	var value = $("#entry-edit-value").val();
+	var date = new Date($("#entry-edit-date").val());
+
+	var url = "/api/manage.php?action=add&category=" + cat_id + "&desc=" + desc +
+		"&value=" + value + "&dt=" + date.toISOString();
+	$.post(url, function (data) {
+		// Everything is fine.
+		console.log(data);
+	}).fail(function (data) {
+		// Something bad occured.
+		console.error("Submit entry error", data);
+		alert(data.error);
+	});
+
+	// Updates the list and hides the modal.
+	dateRangeChanged(function () {
+		$("#entry-modal").modal("hide");
+	});
 }
 
 /**

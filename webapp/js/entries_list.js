@@ -93,10 +93,11 @@ EntriesList.prototype.populateTotalValue = function (total) {
 /**
  * Populate the entries list.
  *
- * @param String from Initial date.
- * @param String to   Final date.
+ * @param String   from     Initial date.
+ * @param String   to       Final date.
+ * @param Function callback Called when everything has finished.
  */
-EntriesList.prototype.populateEntriesList = function (from, to) {
+EntriesList.prototype.populateEntriesList = function (from, to, callback) {
 	var self = this;
 
 	$.ajax({
@@ -137,6 +138,11 @@ EntriesList.prototype.populateEntriesList = function (from, to) {
 
 		// Set the total value.
 		self.populateTotalValue(total);
+
+		// Callback for the future.
+		if (typeof callback == "function") {
+			callback();
+		}
 	});
 }
 
