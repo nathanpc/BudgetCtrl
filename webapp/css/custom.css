@@ -15,6 +15,10 @@
 	color: #929292;
 }
 
+.entry-item:hover, .entry-item:active {
+	background-color: #F1F1F1;
+}
+
 /* Final Report */
 #final-report .total {
 	display: flex;

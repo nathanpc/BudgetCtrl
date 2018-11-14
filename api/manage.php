@@ -20,7 +20,7 @@ function handle_request() {
 	header("Content-type: application/json");
 	
 	if ($_SERVER["REQUEST_METHOD"] == "POST") {
-		// Valid actions for POST: add.
+		// Valid actions for POST: add, edit.
 		switch ($_GET["action"]) {
 		case "add":
 			// Add a new entry.
@@ -33,22 +33,39 @@ function handle_request() {
 				$dt->format("c")
 			);
 			break;
+		case "edit":
+			// Edit an entry.
+			$dt = new DateTime($_GET["dt"], new DateTimeZone("UTC"));
+
+			$manage->edit(
+				(int)filter_input(INPUT_GET, "id", FILTER_SANITIZE_NUMBER_INT),
+				(int)filter_input(INPUT_GET, "category", FILTER_SANITIZE_NUMBER_INT),
+				$_GET["desc"],
+				floatval(filter_input(INPUT_GET, "value", FILTER_SANITIZE_NUMBER_FLOAT, array("flags" => FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_THOUSAND))),
+				$dt->format("c")
+			);
+			break;
 		default:
 			// Invalid action.
 			Response::error("Invalid action type: " . $_GET["action"], 405);
 		}
 	} else if ($_SERVER["REQUEST_METHOD"] == "GET") {
-		// Valid actions for GET: list, get_categories.
+		// Valid actions for GET: list, edit, get_categories.
 		switch ($_GET["action"]) {
 		case "list":
 			// List entries.
-			// Make from and to dates safer.
 			$from = Database::sanitize_dt($_GET["from"]);
 			$to = Database::sanitize_dt($_GET["to"]);
 
 			$manage->list($from, $to);
 			break;
+		case "edit":
+			// Gets the information of a single entry.
+			$manage->get_entry((int)filter_input(INPUT_GET, "id",
+				FILTER_SANITIZE_NUMBER_INT));
+			break;
 		case "list_categories":
+			// List the categories available.
 			$manage->list_categories();
 			break;
 		default:
@@ -103,6 +120,9 @@ class Manage {
 			return;
 		}
 
+		// Update the categories cache.
+		$this->update_categories_cache();
+
 		$res = [
 			"id" => $this->id,
 			"datetime" => [
@@ -110,7 +130,7 @@ class Manage {
 			],
 			"category" => [
 				"id" => $category,
-				"name" => "Testing"
+				"name" => $this->get_category_name((int)$row["cat_id"])
 			],
 			"description" => $desc,
 			"value" => $value
@@ -118,6 +138,55 @@ class Manage {
 
 		echo json_encode($res);
 		// TODO: The application should then issue a img_upload to the returned ID.
+	}
+
+	/**
+	 * Edit an entry in the budget sheet.
+	 *
+	 * @param int    $id       Entry ID.
+	 * @param int    $category Entry category.
+	 * @param string $desc     Description of the entry.
+	 * @param float  $value    Entry value.
+	 * @param string $dt       Date and UTC time of the entry in ISO8601 format.
+	 */
+	public function edit($id, $category, $desc, $value, $dt) {
+		$this->id = $id;
+
+		try {
+			$this->db->update("Entries", [
+				"cat_id" => $category,
+				"dt" => $dt,
+				"description" => $desc,
+				"value" => $value
+			], [
+				"id" => $id
+			]);
+		} catch (Exception $e) {
+			Response::error("An error occured while trying to edit the " .
+				"entry in the database.", 500, [
+				"sql_error" => $e->getMessage()
+			]);
+
+			return;
+		}
+
+		// Update the categories cache.
+		$this->update_categories_cache();
+
+		$res = [
+			"id" => $this->id,
+			"datetime" => [
+				"iso8601" => $dt
+			],
+			"category" => [
+				"id" => $category,
+				"name" => $this->get_category_name($category)
+			],
+			"description" => $desc,
+			"value" => $value
+		];
+
+		echo json_encode($res);
 	}
 
 	/**
@@ -152,6 +221,39 @@ class Manage {
 
 			// Push item to array of entries.
 			array_push($res["entries"], $item);
+		}
+
+		echo json_encode($res);
+	}
+
+	/**
+	 * Gets a single entry.
+	 *
+	 * @param int $id Entry ID.
+	 */
+	public function get_entry($id) {
+		$entries = $this->db->select("Entries", ["*"], "WHERE id = $id");
+		$res = [];
+
+		// Update the categories cache.
+		$this->update_categories_cache();
+
+		foreach ($entries as $row) {
+			$item = [
+				"id" => (int)$row["id"],
+				"datetime" => [
+					"iso8601" => $row["dt"]
+				],
+				"category" => [
+					"id" => (int)$row["cat_id"],
+					"name" => $this->get_category_name((int)$row["cat_id"])
+				],
+				"description" => $row["description"],
+				"value" => floatval($row["value"])
+			];
+
+			// Put the item into the response array.
+			$res["entry"] = $item;
 		}
 
 		echo json_encode($res);

@@ -19,14 +19,18 @@ function EntriesList(base_url, currency_symbol) {
 /**
  * Creates an entry list item.
  *
+ * @param  Number     id       Entry ID.
  * @param  String     desc     Entry description.
  * @param  String     category Entry category.
  * @param  Number     value    Entry value.
  * @return DOMElement          Entry HTML element.
  */
-EntriesList.prototype.createEntryItem = function (desc, category, value) {
+EntriesList.prototype.createEntryItem = function (id, desc, category, value) {
 	// Root element.
-	var li = $("<li>", { class: "list-group-item d-flex justify-content-between align-items-center entry-item" });
+	var li = $("<li>", { 
+		class: "list-group-item d-flex justify-content-between align-items-center entry-item",
+		onclick: "openEntryModal('edit', " + id + ")"
+	});
 
 	// Description label.
 	var desc_html = $("<span>");
@@ -69,7 +73,7 @@ EntriesList.prototype.createEntryList = function (dt, items) {
 		idt.setHours(0, 0, 0, 0);
 
 		if (idt.valueOf() == dt.valueOf()) {
-			ul.append(this.createEntryItem(items[i].description,
+			ul.append(this.createEntryItem(items[i].id, items[i].description,
 				items[i].category.name, items[i]["value"]));
 		}
 	}

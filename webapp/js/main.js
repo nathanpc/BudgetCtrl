@@ -8,6 +8,10 @@
 // Constants.
 var base_url = "";
 var currency_symbol = "&euro;";
+var entry_editing = {
+	status: false,
+	id: null
+};
 
 // Instances.
 var entriesList = new EntriesList(base_url, currency_symbol);
@@ -34,22 +38,15 @@ var dateRangeChanged = function (callback) {
 }
 
 /**
- * Opens the entry edit modal.
+ * Populates the categories selection box in the entry edit modal.
  *
- * @param String action Action type (add or edit).
+ * @param Number id Category ID to be selected by default.
  */
-var openEntryModal = function (action) {
-	if (action == "add") {
-		// Change things to reflect the Add action.
-		$("#entry-modal .modal-title").text("Add Entry");
-	}
-
-	// Set the date to now.
-	var date = new Date();
-	date.setHours(0, 0, 0);
-	$("#entry-edit-date").val(date.toInputValueFormat());
-
+var populateCategoriesSelection = function (id) {
 	$.get("/api/manage.php?action=list_categories", function (data) {
+		// Clear the categories.
+		$("#entry-edit-category").html("");
+		
 		// Populates the categories selection group.
 		data.categories.forEach(function (category) {
 			var option = $("<option>", { value: category.id });
@@ -58,9 +55,64 @@ var openEntryModal = function (action) {
 			$("#entry-edit-category").append(option);
 		});
 
+		// Select the correct category if specified.
+		if (id !== undefined) {
+			$("#entry-edit-category").val(id.toString());
+		}
+
 		// Open the modal.
 		$("#entry-modal").modal("show");
 	});
+}
+
+/**
+ * Opens the entry edit modal.
+ *
+ * @param String action Action type (add or edit).
+ * @param Number id     Entry ID.
+ */
+var openEntryModal = function (action, id) {
+	if (action == "add") {
+		// Change things to reflect the Add action.
+		$("#entry-modal .modal-title").text("Add Entry");
+		entry_editing.status = false;
+		entry_editing.id = null;
+
+		// Clear the fields.
+		$("#entry-edit-description").val("");
+		$("#entry-edit-value").val("");
+
+		// Set the date to now.
+		var date = new Date();
+		date.setHours(0, 0, 0);
+		$("#entry-edit-date").val(date.toInputValueFormat());
+
+		// Populate the categories.
+		populateCategoriesSelection();
+	} else if (action == "edit") {
+		// Change things to reflect the Edit action.
+		$("#entry-modal .modal-title").text("Edit Entry");
+		entry_editing.status = true;
+		entry_editing.id = id;
+
+		// Get the entry information.
+		$.get("/api/manage.php?action=edit&id=" + id, function (data) {
+			var entry = data.entry;
+
+			// Populate the easy ones.
+			$("#entry-edit-description").val(entry.description);
+			$("#entry-edit-value").val(entry.value.toFixed(2));
+			populateCategoriesSelection(entry.category.id);
+
+			// Populate the date.
+			var date = new Date(entry.datetime.iso8601);
+			$("#entry-edit-date").val(date.toInputValueFormat());
+		});
+	} else {
+		// WTF?
+		$("#entry-modal .modal-title").text("Invalid");
+		return false;
+	}
 }
 
 /**
@@ -71,20 +123,31 @@ var submitEntryInput = function () {
 	var desc = $("#entry-edit-description").val();
 	var value = $("#entry-edit-value").val();
 	var date = new Date($("#entry-edit-date").val());
-
 	var url = "/api/manage.php?action=add&category=" + cat_id + "&desc=" + desc +
 		"&value=" + value + "&dt=" + date.toISOString();
+
+	// Change URL for edit.
+	if (entry_editing.status) {
+		url = "/api/manage.php?action=edit&id=" + entry_editing.id +
+			"&category=" + cat_id + "&desc=" + desc + "&value=" + value +
+			"&dt=" + date.toISOString();
+	}
+
+	// Request.
 	$.post(url, function (data) {
 		// Everything is fine.
 		console.log(data);
+
+		// Updates the list and hides the modal.
+		dateRangeChanged(function () {
+			$("#entry-modal").modal("hide");
+		});
 	}).fail(function (data) {
 		// Something bad occured.
 		console.error("Submit entry error", data);
-		alert(data.error);
-	});
+		alert("Error while sumitting the entry: " + data.error);
 
-	// Updates the list and hides the modal.
-	dateRangeChanged(function () {
+		// Hide the modal.
 		$("#entry-modal").modal("hide");
 	});
 }

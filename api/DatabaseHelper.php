@@ -31,7 +31,7 @@ class Database {
 	 */
 	public function insert($table, $cols) {
 		// Create a new array for the keys.
-		$kcols = array();
+		$kcols = [];
 		foreach ($cols as $col => $val) {
 			$kcols[":" . $col] = $val;
 		}
@@ -51,6 +51,47 @@ class Database {
 
 		// Return the ID of the newly inserted row.
 		return (int)$this->pdo->lastInsertId();
+	}
+
+	/**
+	 * Inserts a row into a specified table.
+	 *
+	 * @param  string $table Database table name.
+	 * @param  array  $cols  Associative array with the column name and the value.
+	 * @param  array  $where Associative array with column names and values to be matched.
+	 */
+	public function update($table, $cols, $where) {
+		// Create a new array for the keys.
+		$kcols = [];
+		foreach ($cols as $col => $val) {
+			$kcols[":$col"] = $val;
+		}
+
+		// More keys, now for the where array.
+		foreach ($where as $col => $val) {
+			$kcols[":w$col"] = $val;
+		}
+		
+		// Build the SQL query.
+		$query = "UPDATE $table SET ";
+		foreach ($cols as $col => $val) {
+			$query .= "$col = :$col, ";
+		}
+		$query = substr($query, 0, -2);
+		$query .= " WHERE ";
+		foreach ($where as $col => $val) {
+			$query .= "$col = :w$col AND ";
+		}
+		$query = substr($query, 0, -4);
+
+		// Execute the query and check if it failed.
+		$sql = $this->pdo->prepare($query);
+		if (!$sql->execute($kcols)) {
+			$err = $sql->errorInfo();
+
+			throw new Exception($err[0] . " (" . $err[1] . "): " . $err[2]);
+			return NULL;
+		}
 	}
 
 	/**
