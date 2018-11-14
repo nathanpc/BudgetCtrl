@@ -1,3 +1,7 @@
+# PHP and Composer.
+vendor/
+.env
+
 # Sensitive or test files.
 #config.php
 

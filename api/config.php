@@ -7,6 +7,9 @@ ini_set("display_startup_errors", 1);
 error_reporting(-1);
 ini_set("error_log", Config::LOG_PATH . "php.log");
 
+# Composer libraries.
+require("../vendor/autoload.php");
+
 class Config {
 	// Paths
 	const WEBSITE_ROOT  = "";
