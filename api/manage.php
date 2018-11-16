@@ -20,7 +20,7 @@ function handle_request() {
 	header("Content-type: application/json");
 	
 	if ($_SERVER["REQUEST_METHOD"] == "POST") {
-		// Valid actions for POST: add, edit.
+		// Valid actions for POST: add, edit, delete.
 		switch ($_GET["action"]) {
 		case "add":
 			// Add a new entry.
@@ -44,6 +44,9 @@ function handle_request() {
 				floatval(filter_input(INPUT_GET, "value", FILTER_SANITIZE_NUMBER_FLOAT, array("flags" => FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_THOUSAND))),
 				$dt->format("c")
 			);
+			break;
+		case "delete":
+			$manage->delete((int)filter_input(INPUT_GET, "id", FILTER_SANITIZE_NUMBER_INT));
 			break;
 		default:
 			// Invalid action.
@@ -130,7 +133,7 @@ class Manage {
 			],
 			"category" => [
 				"id" => $category,
-				"name" => $this->get_category_name((int)$row["cat_id"])
+				"name" => $this->get_category_name($category)
 			],
 			"description" => $desc,
 			"value" => $value
@@ -187,6 +190,28 @@ class Manage {
 		];
 
 		echo json_encode($res);
+	}
+
+	/**
+	 * Deletes an entry.
+	 *
+	 * @param int $id Entry ID.
+	 */
+	public function delete($id) {
+		try {
+			$this->db->delete("Entries", "id = :id", [ ":id" => $id ]);
+		} catch (Exception $e) {
+			Response::error("An error occured while trying to delete the " .
+				"entry in the database.", 500, [
+				"sql_error" => $e->getMessage()
+			]);
+
+			return;
+		}
+
+		echo json_encode([
+			"status" => "ok"
+		]);
 	}
 
 	/**

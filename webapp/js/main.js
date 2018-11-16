@@ -75,6 +75,7 @@ var openEntryModal = function (action, id) {
 	if (action == "add") {
 		// Change things to reflect the Add action.
 		$("#entry-modal .modal-title").text("Add Entry");
+		$("#entry-edit-delete").addClass("d-none")
 		entry_editing.status = false;
 		entry_editing.id = null;
 
@@ -92,6 +93,7 @@ var openEntryModal = function (action, id) {
 	} else if (action == "edit") {
 		// Change things to reflect the Edit action.
 		$("#entry-modal .modal-title").text("Edit Entry");
+		$("#entry-edit-delete").removeClass("d-none")
 		entry_editing.status = true;
 		entry_editing.id = id;
 
@@ -149,6 +151,29 @@ var submitEntryInput = function () {
 
 		// Hide the modal.
 		$("#entry-modal").modal("hide");
+	});
+}
+
+/**
+ * Deletes an entry.
+ *
+ * @param Number id Entry ID.
+ */
+var deleteEntry = function (id) {
+	// Use the entry edit ID if nothing was specified.
+	if (id === undefined) {
+		id = entry_editing.id;
+	}
+
+	// Build the URL and send the request.
+	var url = "/api/manage.php?action=delete&id=" + id.toString();
+	$.post(url, function (data) {
+		console.log(data);
+
+		// Updates the list and hides the modal.
+		dateRangeChanged(function () {
+			$("#entry-modal").modal("hide");
+		});
 	});
 }
 

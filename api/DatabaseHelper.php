@@ -95,6 +95,26 @@ class Database {
 	}
 
 	/**
+	 * Deletes a row or multiple rows from the table.
+	 *
+	 * @param string $table  Table name.
+	 * @param string $where  SQL WHERE part of the query.
+	 * @param array  $values Associative array with column names and values to be matched.
+	 */
+	public function delete($table, $where, $values) {
+		$query = "DELETE FROM $table WHERE $where";
+
+		// Execute the query and check if it failed.
+		$sql = $this->pdo->prepare($query);
+		if (!$sql->execute($values)) {
+			$err = $sql->errorInfo();
+
+			throw new Exception($err[0] . " (" . $err[1] . "): " . $err[2]);
+			return NULL;
+		}
+	}
+
+	/**
 	 * Selects some rows from a table.
 	 *
 	 * @param  string $table Table name.
